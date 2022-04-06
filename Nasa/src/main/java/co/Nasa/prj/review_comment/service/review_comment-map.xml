@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.review_comment.service.Review_CommentMapper">
+	<select id="selectReview_CommentList" resultType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		SELECT RC.*, S.S_IMG
+		FROM REVIEW_COMMENT RC, SELLER S
+		WHERE RC.RERE_SEL_ID = S.S_EMAIL
+	</select>
+	
+	<select id="selectReview_comment" resultType="co.Nasa.prj.comm.VO.Review_CommentVO" parameterType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		SELECT *
+		FROM REVIEW_COMMENT
+		WHERE RERE_CODE = #{rere_code}
+	</select>
+	
+	<select id="sellerReviewCommentList" resultType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		SELECT * 
+		FROM REVIEW_COMMENT 
+		WHERE RERE_SEL_ID = #{rere_sel_id}
+	</select>
+	
+	<update id="sellerReviewUpdate" parameterType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		UPDATE REVIEW_COMMENT
+		SET RERE_SEL_SUB = #{rere_sel_sub}
+		WHERE RERE_CODE = #{rere_code}
+	</update>
+	
+	<delete id="deleteReviewComment" parameterType="String">
+		DELETE FROM REVIEW_COMMENT 
+		WHERE RERE_CODE = #{rere_code}
+	</delete>
+	
+	<insert id="sellerReviewInsert" parameterType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		INSERT INTO REVIEW_COMMENT(RERE_CODE, REVIEW_CODE, RERE_SEL_NAME, RERE_SEL_ID,RERE_SEL_SUB )
+		VALUES((SELECT NVL(MAX(TO_NUMBER(RERE_CODE)), 0)+1 FROM REVIEW_COMMENT),
+		#{review_code}, #{rere_sel_name}, #{rere_sel_id}, #{rere_sel_sub})
+	</insert>
+	
+	<select id="reviewCommSelect" resultType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		SELECT * 
+		FROM REVIEW_COMMENT 
+		WHERE REVIEW_CODE = #{review_code}
+	</select>
+	
+	<insert id="writeReview_comment" parameterType="co.Nasa.prj.comm.VO.Review_CommentVO">
+		INSERT INTO	REVIEW_COMMENT(RERE_CODE
+								   , REVIEW_CODE
+								   , RERE_SEL_NAME
+								   , RERE_SEL_ID
+								   , RERE_SEL_SUB
+								   , RERE_DATE)
+		VALUES		((SELECT NVL(MAX(TO_NUMBER(RERE_CODE)), 0) + 1 + 1 FROM REVIEW_COMMENT)
+					, #{review_code}
+					, (SELECT S_NICKNAME FROM SELLER WHERE S_EMAIL = #{rere_sel_id})
+					, #{rere_sel_id}
+					, #{rere_sel_sub}
+					, sysdate)
+	</insert>
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.powerservice.service.PowerServiceMapper">
+
+	<select id="PowerServiceList" resultType="co.Nasa.prj.comm.VO.PowerServiceVO">
+		SELECT * FROM V_POWER_LIST
+		WHERE S_STATUS='U' AND SYSDATE BETWEEN POWER_START AND POWER_END
+	</select>
+	
+	<select id="endPower" resultType="String">
+		<![CDATA[
+		SELECT MAX(POWER_END) 
+		FROM POWERSERVICE 
+		WHERE SER_CODE = #{ser_code} 
+		AND TO_CHAR(SYSDATE, 'YYYY-MM-DD') < POWER_END ]]>
+	</select>
+	
+	<insert id="powerserviceInsert" parameterType="co.Nasa.prj.comm.VO.PowerServiceVO">
+		INSERT INTO POWERSERVICE (POWER_CODE, S_EMAIL,SER_CODE,POWER_START, POWER_END, POWER_PRICE)
+		VALUES((SELECT NVL(MAX(POWER_CODE),0)+1 FROM POWERSERVICE ), #{s_email}, 
+		#{ser_code}, to_date(#{power_start}, 'YYYY-MM-DD'), to_date(#{power_start}, 'YYYY-MM-DD')+6, #{power_price})
+	</insert>
+	
+	<select id="powerServiceCount" resultType="int">
+		SELECT NVL(COUNT(*),0) 
+		FROM POWERSERVICE 
+		GROUP BY POWER_START 
+		HAVING POWER_START = TO_DATE(#{power_start}, 'YYYY-MM-DD')
+	</select>
+	
+	<select id="powerServiceOverlap" resultType="co.Nasa.prj.comm.VO.PowerServiceVO">
+		SELECT * 
+		FROM POWERSERVICE 
+		WHERE POWER_START = TO_DATE(#{power_start}, 'YYYY-MM-DD') AND SER_CODE = #{ser_code}
+	</select>
+	
+	<select id="sellerPowerserviceList" resultType="co.Nasa.prj.comm.VO.PowerServiceVO">
+	SELECT	*
+	FROM	(
+			 SELECT ROWNUM RN, A.*
+			 FROM	(
+				SELECT S.SER_TITLE, S.SER_IMG,S.SER_PRICE, S.SER_LINE, P.* , 
+				(SELECT CAT_NAME FROM CATEGORY C WHERE S.SER_CATE = C.CAT_NO) as cat_name,
+				(SELECT SUB_NAME FROM SUB_CATEGORY SC WHERE S.SER_SUB_CATE = SC.SUB_NO) as sub_name,
+				(SELECT COUNT(SCODE) FROM REVIEW WHERE SCODE=S.SER_CODE) as reviewcount,
+				(SELECT AVG(REV_RATE) FROM REVIEW WHERE SCODE=S.SER_CODE) as reviewavg
+				FROM SERVICE S, POWERSERVICE P
+				WHERE S.SER_CODE = P.SER_CODE 
+				AND S.S_EMAIL = #{s_email} ORDER BY P.POWER_START DESC
+				) A
+		)
+	WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="countPagingPowerservice" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT S.SER_TITLE, S.SER_IMG,S.SER_PRICE, S.SER_LINE, P.* , 
+				(SELECT CAT_NAME FROM CATEGORY C WHERE S.SER_CATE = C.CAT_NO) as cat_name,
+				(SELECT SUB_NAME FROM SUB_CATEGORY SC WHERE S.SER_SUB_CATE = SC.SUB_NO) as sub_name,
+				(SELECT COUNT(SCODE) FROM REVIEW WHERE SCODE=S.SER_CODE) as reviewcount,
+				(SELECT AVG(REV_RATE) FROM REVIEW WHERE SCODE=S.SER_CODE) as reviewavg
+				FROM SERVICE S, POWERSERVICE P
+				WHERE S.SER_CODE = P.SER_CODE 
+				AND S.S_EMAIL = #{s_email} ORDER BY P.POWER_START DESC
+				)
+	</select>
+</mapper>

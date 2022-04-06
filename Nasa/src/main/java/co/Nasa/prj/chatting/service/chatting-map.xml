@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="co.Nasa.prj.chatting.service.ChatMapper">
+
+
+	<resultMap type="ChatRoom" id="chatRoomResultset">
+		<id property="roomid" column="roomid" />
+		<result property="userid" column="userid" />
+		<result property="usernickname" column="usernickname" />
+		<result property="masternickname" column="masternickname" />
+		<result property="masterid" column="masterid" />
+	</resultMap>
+
+	<resultMap type="ChatMessage" id="chatMessageResultSet">
+		<id property="messageid" column="mssageid" />
+		<result property="roomid" column="roomid" />
+		<result property="message" column="message" />
+		<result property="sentid" column="sentid" />
+		<result property="nickname" column="nickname" />
+		<result property="unReadCount" column="unReadCount" />
+	</resultMap>
+
+	<!-- 신규 채팅방일 때 채팅 방 생성 -->
+	<insert id="createChat">
+		INSERT INTO CHATROOM
+		(ROOMID,USERID,USERNICKNAME,MASTERID,MASTERNICKNAME,SER_CODE
+		,S_IMG,B_IMG)
+		VALUES
+		((SELECT NVL(MAX(TO_NUMBER(ROOMID)),0)+1 FROM CHATROOM),
+		#{userid},
+		#{usernickname},
+		#{masterid}, #{masternickname},#{ser_code},
+		#{s_img},#{b_img})
+	</insert>
+
+	<select id="selectChatRoom" resultMap="chatRoomResultset">
+		SELECT * FROM CHATROOM
+		WHERE roomid = #{roomid}
+	</select>
+
+	<insert id="insertMessage">
+			INSERT INTO CHATMESSAGE VALUES(
+			(SELECT NVL(MAX(TO_NUMBER(MSSAGEID)),0)+1 FROM CHATMESSAGE),
+			#{roomid},#{message}, #{sentid}, #{nickname}, DEFAULT)
+	</insert>
+	<!-- <delete id="chatroomDelete"> delete from chatroom where roomid=#{roomid} 
+		</delete> -->
+	<select id="messageList" resultMap="chatMessageResultSet">
+		SELECT * FROM CHATMESSAGE
+		WHERE roomid = #{roomid}
+	</select>
+
+	<select id="searchChatRoom" resultType="ChatRoom">
+		SELECT * FROM CHATROOM
+		WHERE userid= #{userid} AND
+		masterid = #{masterid}
+	</select>
+
+	<select id="chatRoomList" resultMap="chatRoomResultset">
+		SELECT * FROM CHATROOM
+		WHERE
+		userid = #{userid} OR masterid = #{userid}
+	</select>
+
+	<select id="selectUnReadCount" resultType="int">
+		SELECT COUNT(*) FROM
+		CHATMESSAGE
+		WHERE roomid = #{roomid}
+		AND sentid != #{sentid} AND
+		unReadCount = 1
+	</select>
+
+	<update id="updateCount">
+		UPDATE CHATMESSAGE
+		SET
+		unReadCount = 0
+		WHERE roomid =
+		#{roomid} AND sentid != #{sentid}
+		AND unReadCount = 1
+	</update>
+	
+	<select id="mainUnReadCount">
+	SELECT COUNT(*)
+	FROM CHATMESSAGE
+	where sentid = #{sentid}
+    and unreadcount = 1
+	</select>
+	
+	<select id="" resultType="co.Nasa.prj.comm.VO.ServiceVO">
+	SELECT * FROM SERVICE WHERE S_CODE ={sno}
+	</select>
+	
+	<!-- 채팅 프로모션 -->
+	<select id="chatpromotion" resultType="String" parameterType="String">
+	 SELECT P.PRO_CODE
+	 FROM  SERVICE S INNER JOIN PROMOTION P
+	 ON  S.PRO_CODE = P.PRO_CODE
+	 WHERE SER_CODE = #{ser_code}
+	
+	</select>
+	
+
+</mapper>

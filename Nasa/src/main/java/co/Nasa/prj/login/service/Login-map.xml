@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.login.service.LoginMapper">
+
+	<select id="selectListbuyer"
+		resultType="co.Nasa.prj.login.service.LoginVO">
+		select * from buyer
+	</select>
+
+
+	<select id="selectbuyerId"
+		resultType="co.Nasa.prj.login.service.LoginVO">
+		SELECT * FROM buyer WHERE B_EMAIL = #{b_email}
+	</select>
+
+	<select id="readMemberInfo"
+		resultType="co.Nasa.prj.login.service.LoginVO">
+		SELECT * FROM buyer WHERE B_EMAIL=#{B_EMAIL}
+	</select>
+
+	<!-- seller 로그인 -->
+	<select id="selectseller"
+		resultType="co.Nasa.prj.comm.VO.SellerVO">
+		select * from seller
+		where s_email=#{s_email}
+	</select>
+	<!-- admin 로그인 -->
+	<select id="selectadmin"
+		resultType="co.Nasa.prj.comm.VO.AdminVO">
+		select * from admin
+		where aid=#{aid}
+	</select>
+	<!-- and b_password = #{b_password} -->
+	<select id="selectbuyer"
+		resultType="co.Nasa.prj.login.service.LoginVO">
+		select * from buyer
+		where b_email=#{b_email}
+
+	</select>
+
+</mapper>

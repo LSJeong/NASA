@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.admin.report.service.AdminReportMapper">
+
+  
+  <sql id="criteria"> 
+  	<if test= "re_type!=null and !re_type.equals('')">
+  	    AND re_type like '%'||#{re_type}||'%'
+  	 </if>
+  	 
+  	 <if test="re_reporter!=null and !re_reporter.equals('')">
+  	     AND re_reporter like '%'||#{re_reporter}||'%'
+  	</if>
+  	
+  	<if test="re_date!=null and !re_date.equals('')">
+  	   <![CDATA[
+  	     AND to_char(re_date,'yyyymmdd') between #{re_date} and #{re_date2}
+  	  ]]>   
+     </if>
+    
+  </sql>
+  
+  <select id="getReportListWithPaging" resultType="co.Nasa.prj.comm.VO.ReportVO">
+  <![CDATA[
+  	 SELECT *FROM 
+  	     (
+  	     SELECT rownum rn, r.*
+  	     FROM (SELECT * 
+               FROM report
+               ORDER BY re_code DESC) r
+  	     WHERE
+  	      rownum <=#{pageNum} * #{amount} 
+  	  ]]> 
+  	     <include refid="criteria"></include>
+  	     
+  	   <![CDATA[  
+  	     )
+  	 WHERE rn > (#{pageNum}-1 )* #{amount}
+ 
+  	 ]]>
+  	  
+  </select>
+  
+	<select id="detailedReport" parameterType="String" resultType="co.Nasa.prj.comm.VO.ReportVO">
+      SELECT v.* ,r.*
+	  FROM vw_member_report v JOIN report r
+	  ON (v.email=r.re_res)
+	  WHERE email=#{email} AND re_code=#{re_code}
+	 
+  </select>
+    <select id="totalReport" resultType="int">
+  	select count(*)  from report
+  	 
+  	    <trim prefix="where" prefixOverrides="AND">
+  	      <include refid="criteria"></include>
+  	    </trim>
+  	  
+  </select>
+  
+  <select id="todayPermanentStop" resultType="int">
+    SELECT count(*) FROM vw_blacklist 
+	WHERE status='D'AND to_char(blackdate,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd')
+  </select>
+  
+    <select id="todayBlackListMember" resultType="int">
+    SELECT count(*) FROM vw_blacklist 
+	WHERE status='M'AND to_char(blackdate,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd')
+  </select>
+  
+  
+  <select id="totalReportWait" resultType="int">
+  	select count(*) from report where re_result is null
+  	 
+  	      <include refid="criteria"></include>
+  	  
+  </select>
+  
+  <select id="getReportWaitListWithPaging" resultType="co.Nasa.prj.comm.VO.ReportVO">
+  	<![CDATA[
+  	 SELECT *
+  	 FROM 
+  	     (
+  	      SELECT rownum rn, r.*
+  	     FROM (SELECT * 
+               FROM report
+               ORDER BY re_code desc) r
+  	     WHERE re_result is null AND rownum <=#{pageNum} * #{amount}
+  	     
+  	     ]]>
+  	     <include refid="criteria"></include>
+  	 <![CDATA[    
+  	 	
+  	     )
+  	 WHERE rn > (#{pageNum}-1 )* #{amount}
+  	]]>
+  </select>
+  
+ <update id="updateReportResult" parameterType="co.Nasa.prj.admin.service.AdminAuthorVO" >
+ 	UPDATE report
+	SET re_result = 'Y', RE_RPOERTDATE=sysdate
+	
+	WHERE re_code= #{re_code}
+	
+ </update>
+
+  <update id="updateDeniedReport" parameterType="co.Nasa.prj.comm.VO.ReportVO">
+  	UPDATE REPORT
+	SET re_result='D', re_rpoertdate=sysdate,re_denied=#{re_denied}
+	WHERE re_code=#{re_code}
+  
+  </update>
+  
+  <resultMap type="hashmap" id="update_newReport"/>
+  	<select id="updateConfirmReport" parameterType="hashmap" statementType="CALLABLE">
+  		{CALL confirm_report(
+  		   #{p_id},
+  		   #{p_code},
+  		   #{result, mode=OUT, jdbcType=INTEGER, javaType=INTEGER, resultMap=update_newReport}
+  		   )
+  		   
+  		 }
+  	</select>
+  	
+  	
+  	
+  <select id="totalReportComplete" resultType="int">
+  	select count(*) from report where re_result ='Y'
+  	 
+  	      <include refid="criteria"></include>
+  	   
+  </select>
+  
+  <select id="getReportCompleteListWithPaging" resultType="co.Nasa.prj.comm.VO.ReportVO">
+  	<![CDATA[
+  	 SELECT *
+  	 FROM 
+  	     (
+  	     SELECT rownum rn, r.*
+  	     FROM (SELECT * 
+               FROM report
+               WHERE re_result ='Y'
+               ORDER BY re_code DESC) r
+  	     WHERE rownum <=#{pageNum} * #{amount}
+  	     
+  	     ]]>
+  	     <include refid="criteria"></include>
+  	 <![CDATA[    
+  	 	 
+  	     )
+  	 WHERE rn > (#{pageNum}-1 )* #{amount}
+  	]]>
+  </select>
+  
+  
+  <select id="detailedReportComplete" parameterType="String" resultType="co.Nasa.prj.comm.VO.ReportVO">
+      SELECT v.* ,r.*
+	  FROM vw_member_report v JOIN report r
+	  ON (v.email=r.re_res)
+	  WHERE email=#{email} AND re_code=#{re_code}
+	 
+  </select>
+  
+  
+  
+  <select id="totalReportRefuse" resultType="int">
+  	select count(*) from report where re_result ='D'
+  	 
+  	      <include refid="criteria"></include>
+  	   
+  </select>
+  
+  <select id="getReportRefuseListWithPaging" resultType="co.Nasa.prj.comm.VO.ReportVO">
+  	<![CDATA[
+  	 SELECT *
+  	 FROM 
+  	     (
+  	     SELECT rownum rn, r.*
+  	     FROM (SELECT * 
+               FROM report
+               ORDER BY re_code desc) r
+  	     WHERE re_result ='D' AND rownum <=#{pageNum} * #{amount}
+  	     
+  	     ]]>
+  	     <include refid="criteria"></include>
+  	 <![CDATA[    
+  	 	 
+  	     )
+  	 WHERE rn > (#{pageNum}-1 )* #{amount}
+  	]]>
+  </select>
+  
+  
+  <select id="detailedRefuseComplete" parameterType="String" resultType="co.Nasa.prj.comm.VO.ReportVO">
+      SELECT v.* ,r.*
+	  FROM vw_member_report v JOIN report r
+	  ON (v.email=r.re_res)
+	  WHERE email=#{email} AND re_code=#{re_code}
+	 
+  </select>
+  
+  <update id="scheduleSellerBlackList" parameterType="co.Nasa.prj.admin.service.AdminAuthorVO">
+  <![CDATA[
+  	update seller
+    set s_status = 'U',blacklistdate=''
+
+
+    where s_status='M' and s_email IN (
+
+                                      select distinct r.re_res  
+                                      from report r join seller s 
+                                      on (ADD_MONTHS(r.re_rpoertdate,1) < sysdate and r.re_res=s.s_email)
+                                     )
+  ]]>
+  </update>
+  
+    <update id="scheduleBuyerBlackList" parameterType="co.Nasa.prj.admin.service.AdminAuthorVO">
+  <![CDATA[
+  	update buyer
+    set b_status = 'U',blacklistdate=''
+
+    where b_status='M' and b_email IN (
+                                      select distinct r.re_res  
+                                      from report r join buyer b 
+                                      on (ADD_MONTHS(r.re_rpoertdate,1) < sysdate and r.re_res=b.b_email)
+                                     )
+  ]]>
+  </update>
+  
+  <sql id="blackListCriteria">
+		<if test= "email!=null and !email.equals('')">
+	  	    AND email like '%'||#{email}||'%'
+	  	 </if>
+	  	 
+	  	 <if test="name!=null and !name.equals('')">
+	  	     AND name like '%'||#{name}||'%'
+	  	</if>
+	  	
+	  	<if test="nickname!=null and !nickname.equals('')">
+	  	     AND nickname = #{nickname}
+	  	</if>
+	  	
+	  	<if test="status!=null and !status.equals('')">
+	  	     AND status = #{status}
+	  	</if>
+	  	
+	  	<if test="gb!=null and !gb.equals('')">
+	  	     AND gb like '%'||#{gb}||'%'
+	  	</if>
+	  	
+	  	<if test="blackdate!=null and !blackdate.equals('')">
+	  	   <![CDATA[
+	  	     AND to_char(blackdate,'yyyymmdd') between #{blackdate} and #{blackdate2}
+	  	  ]]>   
+	     </if>
+	</sql>
+  
+  
+  <select id="getBlackListWithPaging" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+  	<![CDATA[
+  	 SELECT *
+  	 FROM 
+  	     (
+  	     SELECT rownum rn, r.*
+  	     FROM (SELECT * 
+               FROM vw_blacklist
+               ORDER BY email) r
+  	     WHERE rownum <=#{pageNum} * #{amount}
+  	     
+  	     ]]>
+  	     <include refid="blackListCriteria"></include>
+  	 <![CDATA[    
+  	 	
+  	     )
+  	 WHERE rn > (#{pageNum}-1 )* #{amount}
+  	]]>
+  
+  </select>
+  
+  <select id="searchBlackListTotal" resultType="int">
+    SELECT COUNT(*)
+    FROM VW_BLACKLIST
+    <trim prefix="where" prefixOverrides="and">
+    	<include refid="blackListCriteria"></include>
+    </trim> 
+  </select>
+  
+  <select id="blackListTotal" resultType="int">
+	   SELECT COUNT(*)
+	   FROM VW_BLACKLIST
+  </select>
+  
+
+  
+  
+  <select id="detailBlackMember" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+    SELECT *
+    FROM VW_BLACKLIST
+    WHERE email=#{email}
+  </select>
+  
+  
+  <select id="todayReportTotal" resultType="int">
+  	select count(*) from report where to_char(re_date,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd')
+  </select>
+  
+  <select id="waitReportTotal" resultType="int">
+  	select count(*) from report where re_result is null
+  </select>
+  
+  <select id="realTotalReport" resultType="int">
+  	select count(*) from report
+  </select>
+  
+  
+
+</mapper>

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.review.service.ReviewMapper">
+	<select id="buyerSelectReviewList" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT		*
+		FROM		REVIEW
+		WHERE		REV_ID = #{rev_id}
+		ORDER BY 	REV_CODE DESC
+	</select>
+	
+	<select id="selectReview" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT	*
+		FROM	REVIEW
+		WHERE	REV_CODE = #{rev_code}
+	</select>
+	
+	<delete id="deleteReview" parameterType="co.Nasa.prj.comm.VO.ReviewVO">
+		DELETE
+		FROM 	REVIEW
+		WHERE 	REV_CODE = #{rev_code}
+	</delete>
+	
+	<insert id="insertReview" parameterType="co.Nasa.prj.comm.VO.ReviewVO">
+		INSERT INTO REVIEW(REV_CODE, SCODE, REV_NAME, REV_SUB, REV_ID, REV_SER_NAME, REV_IMG, REV_RATE, REV_DATE)
+		VALUES ((SELECT NVL(MAX(TO_NUMBER(REV_CODE)), 0) + 1 FROM REVIEW)
+				, #{scode}
+				, #{rev_name}
+				, #{rev_sub}
+				, #{rev_id}
+				, #{rev_ser_name}
+				, #{rev_img}
+				, #{rev_rate}
+				, sysdate
+				)
+	</insert>
+	
+	<!-- <insert id="insertReview" parameterType="co.Nasa.prj.comm.VO.ReviewVO">
+		INSERT INTO REVIEW(REV_CODE, SCODE, REV_NAME, REV_SUB, REV_ID, REV_SER_NAME)
+		VALUES (#{rev_code}
+				, #{scode}
+				, #{rev_name}
+				, #{rev_sub}
+				, #{rev_id}
+				, #{rev_ser_name})
+	</insert> -->
+	
+	<update id="updateReview" parameterType="co.Nasa.prj.comm.VO.ReviewVO">
+		UPDATE	REVIEW
+		SET		REV_SUB = #{rev_sub}, REV_RATE = #{rev_rate}, REV_IMG = #{rev_img}
+		WHERE	REV_CODE = #{rev_code}
+	</update>
+	
+	
+	<select id="sellerReviewList" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+	SELECT	*
+		FROM	(
+				 SELECT	ROWNUM RN, A.*
+				 FROM	(
+					<!-- SELECT m.* FROM SERVICE s ,
+					(SELECT * FROM REVIEW r , REVIEW_COMMENT c WHERE REV_CODE = REVIEW_CODE(+) ORDER BY REV_DATE DESC) m
+					WHERE s.s_email = #{s_email} and s.ser_code = scode 
+					<if test="ser_code != 0">
+				  	     AND s.ser_code = #{ser_code}
+				  	</if> -->
+				  	
+				  	
+				  	SELECT      R.*, C.*, B.B_IMG, S.S_IMG
+					FROM      (SELECT RE.* FROM REVIEW RE, SERVICE SER 
+					            WHERE RE.SCODE = SER.SER_CODE 
+					            <if test="ser_code != 0">
+							  	     AND RE.SCODE = #{ser_code}
+							  	</if>
+					            AND SER.S_EMAIL=#{s_email}) R
+					LEFT JOIN   REVIEW_COMMENT C
+					ON         R.REV_CODE = C.REVIEW_CODE
+					LEFT JOIN   BUYER B
+					ON         R.REV_ID = B.B_EMAIL
+					LEFT JOIN   SELLER S
+					ON          C.RERE_SEL_ID = S.S_EMAIL
+					ORDER BY   TO_NUMBER(REV_CODE) DESC
+			) A
+		)
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="sellerReviewSelectList" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT		r.* 
+		FROM 		REVIEW r, SERVICE s 
+		WHERE 		S_EMAIL= #{s_email} 
+					AND SCODE = SER_CODE
+					AND SCODE = #{scode}
+		ORDER BY 	r.rev_date DESC
+	</select>
+	
+	<select id="reviewSearch" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT m.* FROM SERVICE s ,
+		(SELECT * FROM REVIEW r , REVIEW_COMMENT c WHERE REV_CODE = REVIEW_CODE(+) ORDER BY REV_DATE DESC) m
+		WHERE s.s_email = #{s_email} and s.ser_code = scode and s.ser_code = #{ser_code}
+	</select>
+	
+
+	
+
+	<select id = "selectPagingReviewList" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT	*
+		FROM	(
+				 SELECT	ROWNUM RN, A.*
+				 FROM	(
+				 		 SELECT		R.*, B.B_IMG
+				 		 FROM		REVIEW R, BUYER B
+				 		 WHERE		R.REV_ID = #{rev_id} AND R.REV_ID = B.B_EMAIL
+						 ORDER BY 	R.REV_DATE DESC
+				 ) A
+		)
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id = "countPagingReview" resultType = "int">
+		SELECT	COUNT(*)
+		FROM	REVIEW
+		WHERE	REV_ID = #{rev_id}
+	</select>
+	
+	<select id="selectReviewandReviewComment" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT		R.*, C.*, B.B_IMG
+		FROM		REVIEW R
+		LEFT JOIN	REVIEW_COMMENT C
+		ON			R.REV_CODE = C.REVIEW_CODE
+		LEFT JOIN	BUYER B
+		ON			R.REV_ID = B.B_EMAIL
+		WHERE		SCODE = #{scode}
+		ORDER BY	TO_NUMBER(REV_CODE) DESC
+	</select>
+	
+	<select id="pagingReviewandReviewComment" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT	*
+		FROM	(
+				 SELECT	ROWNUM RN, A.*
+				 FROM	(
+				 		 SELECT		R.*, C.*, B.B_IMG
+						 FROM		REVIEW R
+						 LEFT JOIN	REVIEW_COMMENT C
+						 ON			R.REV_CODE = C.REVIEW_CODE
+						 LEFT JOIN	BUYER B
+						 ON			R.REV_ID = B.B_EMAIL
+						 WHERE		SCODE = #{scode}
+						 ORDER BY	TO_NUMBER(REV_CODE) DESC
+				 ) A
+		)
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="countReviewandReviewComment" resultType="int">
+		SELECT 	COUNT(*)
+		FROM	(
+				 SELECT		R.*, C.*, B.B_IMG
+				 FROM		REVIEW R
+				 LEFT JOIN	REVIEW_COMMENT C
+				 ON			R.REV_CODE = C.REVIEW_CODE
+				 LEFT JOIN	BUYER B
+				 ON			R.REV_ID = B.B_EMAIL
+				 WHERE		SCODE = #{scode}
+				 ORDER BY	TO_NUMBER(REV_CODE) DESC
+		)
+	</select>
+	
+	<select id="sellerReviewCount" resultType="int">
+	    SELECT COUNT(*) FROM (
+     		SELECT      R.*, C.*, B.B_IMG, S.S_IMG
+			FROM      (SELECT RE.* FROM REVIEW RE, SERVICE SER 
+			            WHERE RE.SCODE = SER.SER_CODE 
+			            <if test="ser_code != 0">
+					  	     AND RE.SCODE = #{ser_code}
+					  	</if>
+			            AND SER.S_EMAIL=#{s_email}) R
+			LEFT JOIN   REVIEW_COMMENT C
+			ON         R.REV_CODE = C.REVIEW_CODE
+			LEFT JOIN   BUYER B
+			ON         R.REV_ID = B.B_EMAIL
+			LEFT JOIN   SELLER S
+			ON          C.RERE_SEL_ID = S.S_EMAIL
+		)
+	</select>
+	<select id="countAllSellerDetailReview" resultType = "int">
+		SELECT	COUNT(*)
+		FROM	REVIEW R, SERVICE SR
+		WHERE	R.SCODE = SR.SER_CODE
+		AND		SR.S_EMAIL = #{s_email}
+	</select>
+	<select id="countSellerDetailReview" resultType="int">
+	</select>
+	<select id="sellerDetailReview" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT	*
+		FROM	(
+				 SELECT	ROWNUM RN, A.*
+				 FROM	(
+				 		 SELECT		R.*, C.*
+				 		 FROM		REVIEW R
+				 		 LEFT JOIN	REVIEW_COMMENT C
+				 		 ON			R.REV_CODE = C.REVIEW_CODE
+				 		 LEFT JOIN	SERVICE S
+				 		 ON			R.SCODE = S.SER_CODE
+				 		 WHERE		S.S_EMAIL = #{s_email}
+				 ) A
+		)
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="calcRateList" resultType="co.Nasa.prj.comm.VO.ReviewVO">
+		SELECT		S.S_EMAIL AS S_EMAIL, ROUND(AVG(R.REV_RATE), 2) AS RATE
+		FROM		REVIEW R, SERVICE S
+		WHERE		R.SCODE = S.SER_CODE
+		GROUP BY	S.S_EMAIL
+	</select>
+	
+	<select id = "countScodeReview" resultType = "int">
+		SELECT	COUNT(*)
+		FROM	REVIEW
+		WHERE	SCODE = #{scode} AND REV_ID = #{rev_id}
+	</select>
+</mapper>

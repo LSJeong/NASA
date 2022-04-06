@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="co.Nasa.prj.admin.payment.service.AdminPaymentMapper">
+
+
+ <sql id="buyerPaymentCriteria"> 
+  	<if test= "b_email!=null and !b_email.equals('')">
+  	    AND b_email like '%'||#{b_email}||'%'
+  	 </if>
+  	 
+  	 <if test="ser_title!=null and !ser_title.equals('')">
+  	     AND ser_title like '%'||#{ser_title}||'%'
+  	</if>
+  	
+  	<if test="pay_cate!=null and !pay_cate.equals('')">
+  	     AND pay_cate like '%'||#{pay_cate}||'%'
+  	</if>
+  	
+  	<if test="pay_cate1!=null and !pay_cate1.equals('')">
+  	     AND pay_cate1 like '%'||#{pay_cate1}||'%'
+  	</if>
+  	<if test="pay_date!=null and !pay_date.equals('')">
+  	   <![CDATA[
+  	     AND to_char(pay_date,'yyyy-mm-dd') between #{pay_date} and #{pay_date2}
+  	  ]]>   
+     </if>
+   </sql>
+ <select id="getBuyerPaymentListWithPaging" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+    
+    <![CDATA[
+			  SELECT rownum rn, pay_code,b_email,s_email,s_code,pay_date,pay_cate,pay_cate1,pay_type,pay_coupon,REGEXP_REPLACE(REVERSE(REGEXP_REPLACE( REVERSE(TO_CHAR(pay_price)), '([0-9]{3})','\1,')), '^,','') AS pay_price,pay_enddate,event_start,event_end,pay_originp,pay_com 
+			  FROM 
+					 (
+					   select rownum rn,P.*
+                       from(select pay_code,b_email,s_email,s_code,pay_date,pay_cate,pay_cate1,pay_type,pay_coupon,pay_price,pay_enddate,event_start,event_end,pay_originp,pay_com,
+                            (select ser_title from service where payment.s_code=ser_code)as ser_title 
+					        from payment
+                            order by pay_code desc)P
+					   WHERE ROWNUM <=#{pageNum} * #{amount}
+           ]]>
+              <include refid="buyerPaymentCriteria"></include> 
+       <![CDATA[                 
+					   )
+				
+			 WHERE rn>(#{pageNum}-1)*#{amount}
+			 	]]>
+    
+ 
+ </select>
+ 
+ <select id="getBuyerPaymentTotal" resultType="int">
+         SELECT count(*)
+		 FROM powerservice p join service s
+		 ON (p.ser_code=s.ser_code)
+    <trim prefix="WHERE" prefixOverrides="AND">
+    	 <include refid="buyerPaymentCriteria"></include> 
+    </trim>
+ </select>
+ 
+
+ 
+ <select id="detailBuyerPayment" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+ 	SELECT
+		p.pay_code,p.b_email,p.s_email,p.s_code,p.pay_date,p.pay_type,p.pay_coupon,
+		REGEXP_REPLACE(REVERSE(REGEXP_REPLACE( REVERSE(TO_CHAR(p.pay_price)), '([0-9]{3})','\1,')), '^,','') AS pay_price,
+		p.pay_enddate,p.event_start,p.event_end,p.pay_originp,p.pay_com,ser.ser_title,ser.ser_team,
+		(select cat_name from category where p.pay_cate=cat_no) as cat_name,
+		(select sub_name from sub_category where p.pay_cate1=sub_no) as sub_name, 
+		(select s_name from seller where p.s_email=s_email) as s_name,
+		(select s_author from seller where p.s_email=s_email) as s_author,
+		(select s_status from seller where p.s_email=s_email) as s_status,
+		(select b_name from buyer where p.b_email=b_email) as b_name,
+		(select b_status from buyer where p.b_email=b_email) as b_status
+		FROM payment p, service ser
+		WHERE p.s_code=ser.ser_code AND pay_code=#{pay_code}
+ 
+ </select>
+ 
+  <sql id="sellerPaymentCriteria">
+  	<if test= "s_email!=null and !s_email.equals('')">
+  	    AND p.s_email like '%'||#{s_email}||'%'
+  	 </if>
+  	 
+  	 <if test="ser_title!=null and !ser_title.equals('')">
+  	     AND ser_title like '%'||#{ser_title}||'%'
+  	</if>
+  	
+  	<if test="ser_cate!=null and !ser_cate.equals('')">
+  	     AND ser_cate like '%'||#{ser_cate}||'%'
+  	</if>
+  	 <if test="ser_team!=null and !ser_team.equals('')">
+  	     AND ser_team = #{ser_team}
+  	</if>
+  	<if test="ser_sub_cate!=null and !ser_sub_cate.equals('')">
+  	     AND ser_sub_cate like '%'||#{ser_sub_cate}||'%'
+  	</if>
+  	<if test="power_date!=null and !power_date.equals('')">
+  	   <![CDATA[
+  	     AND to_char(p.power_date,'yyyy-mm-dd') between #{power_date} and #{power_date2}
+  	  ]]>   
+     </if>
+  </sql>
+ 
+ <select id="getSellerPaymentListWithPaging" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+	 <![CDATA[
+			  SELECT * 
+			  FROM 
+					 (
+					   select rownum rn,P.*
+                       from(SELECT p.power_code, p.s_email, p.ser_code, p.power_start,p.power_end,p.power_date, REGEXP_REPLACE(REVERSE(REGEXP_REPLACE( REVERSE(TO_CHAR(p.power_price)), '([0-9]{3})','\1,')), '^,',''),
+					       		   s.ser_title,s.ser_cate,s.ser_sub_cate,s.ser_team,
+					       		   (select s_name from seller where p.s_email=s_email) as s_name,
+					               (select s_author from seller where p.s_email=s_email) as s_author,
+					               (select cat_name from category where s.ser_cate=cat_no) as cat_name,
+					               (select sub_name from sub_category where s.ser_sub_cate=sub_no) as sub_name
+							FROM powerservice p join service s
+						    ON (p.ser_code=s.ser_code)
+						    order by p.power_code desc)p
+					   WHERE ROWNUM <=#{pageNum} * #{amount}
+           ]]>
+              <include refid="sellerPaymentCriteria"></include> 
+       <![CDATA[                 
+					   )
+				
+			 WHERE rn>(#{pageNum}-1)*#{amount}
+			 	]]>
+	 
+ </select>
+ 
+ <select id="getSellerPaymentTotal" resultType="int">
+     SELECT count(*)
+	 FROM powerservice p join service s
+	 ON (p.ser_code=s.ser_code)
+     <trim prefix="WHERE" prefixOverrides="AND">
+     	 <include refid="sellerPaymentCriteria"></include> 
+     </trim>
+ </select>
+ 
+ <select id="detailSellerPayment" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+ 	select p.power_code, p.s_email, p.ser_code, p.power_start,p.power_end,p.power_date, to_char(p.power_price,'fm999,999,999,999') power_price,
+       s.ser_title,s.ser_cate,s.ser_sub_cate,s.pro_code,s.ser_start,s.ser_sub,s.ser_sub_cate,s.ser_price,
+       s.ser_sale,s.ser_date,s.ser_img,s.ser_img,s.ser_offer,s.ser_imgorigin,s.ser_line,s.ser_skill,
+       s.ser_team,s.ser_frame,s.ser_dbms,s.ser_subimg,s.ser_subimg2,s.ser_subimg3,s.ser_originsub,
+       s.ser_originsub2,s.ser_originsub3,s.ser_status,s.ser_reason,s.ser_end,
+       (select s_name from seller where p.s_email=s_email) as s_name,
+       (select s_author from seller where p.s_email=s_email) as s_author,
+       (select s_nickname from seller where p.s_email=s_email) as s_nickname,
+       (select cat_name from category where s.ser_cate=cat_no) as cat_name,
+       (select sub_name from sub_category where s.ser_sub_cate=sub_no) as sub_name
+	from powerservice p join service s
+	on (p.ser_code=s.ser_code)
+	where p.power_code=#{power_code}
+ 
+ </select>
+</mapper>

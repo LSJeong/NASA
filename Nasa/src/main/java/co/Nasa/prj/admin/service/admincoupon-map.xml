@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.admin.service.AdminCouponMapper">
+
+<update id="schcoupondelete">
+update buyer
+set buyer_coupon = 0
+</update>
+
+
+<update id="schcouponupdate1">
+update buyer
+set buyer_coupon = buyer_coupon+1
+where b_email in (select b_email 
+                  from buyer
+                  where b_rank ='1')
+</update>
+
+<update id="schcouponupdate2">
+update buyer
+set buyer_coupon = buyer_coupon+2
+where b_email in (select b_email 
+                  from buyer
+                  where b_rank ='2')
+</update>
+
+<update id="schcouponupdate3">
+update buyer
+set buyer_coupon = buyer_coupon+3
+where b_email in (select b_email 
+                  from buyer
+                  where b_rank ='3')
+</update>
+
+<update id="schcouponupdate4">
+update buyer
+set buyer_coupon = buyer_coupon+4
+where b_email in (select b_email 
+                  from buyer
+                  where b_rank ='4')
+</update>
+
+
+<!-- 구매자 등급 업데이트 -->
+	<update id="schrankupdate">
+		UPDATE	BUYER b
+		SET		B_RANK = (
+						  SELECT	CASE WHEN <![CDATA[price < 1000000]]>	THEN '1'
+										 WHEN <![CDATA[price < 5000000]]>	THEN '2'
+										 WHEN <![CDATA[price < 10000000]]>	THEN '3'
+										 WHEN <![CDATA[price >= 10000000]]>	THEN '4'
+									END
+									
+						  FROM		(
+						  			 SELECT	NVL(SUM(PAY_PRICE),0) AS price
+						  			 FROM	PAYMENT
+						  			 WHERE	B_EMAIL = b.B_EMAIL AND PAY_ENDDATE IS NOT NULL
+						  			)
+						  )
+	</update>
+<!-- 구매자 등급 업데이트 -->
+
+	<update id="sellerschrankupdate">
+		UPDATE SELLER s
+		SET S_RANK = (
+						SELECT	CASE WHEN <![CDATA[price < 5000000]]>	THEN '1'
+										 WHEN <![CDATA[price < 10000000]]>	THEN '2'
+										 WHEN <![CDATA[price < 20000000]]>	THEN '3'
+										 WHEN <![CDATA[price >= 30000000]]>	THEN '4'
+									END
+									
+						  FROM		(
+						  			 SELECT	NVL(SUM(PAY_PRICE),0) AS price
+						  			 FROM	PAYMENT
+						  			 WHERE	S_EMAIL = s.S_EMAIL AND PAY_ENDDATE IS NOT NULL
+						  			)
+						  )
+	</update>
+</mapper>

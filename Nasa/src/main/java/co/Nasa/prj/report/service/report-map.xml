@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.report.service.ReportMapper">
+	<select id="selectBuyerReportList" resultType="co.Nasa.prj.comm.VO.ReportVO">
+		SELECT *
+		FROM REPORT
+		WHERE RE_REPORTER = #{re_reporter}
+	</select>
+	
+	<select id="selectSellerReportList" resultType="co.Nasa.prj.comm.VO.ReportVO">
+		SELECT	*
+		FROM	(
+				 SELECT	ROWNUM RN, A.*
+				 FROM	(
+					SELECT *
+					FROM REPORT
+					WHERE RE_REPORTER = #{re_reporter}
+					ORDER BY RE_DATE DESC
+				) A
+		)		
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<insert id="insertBuyerReportsSeller" parameterType="co.Nasa.prj.comm.VO.ReportVO">
+		INSERT INTO REPORT(RE_CODE, RE_TYPE, RE_REPORTER, RE_RES, RE_DATE, RE_SUBJECT)
+		VALUES (
+			(SELECT NVL(MAX(TO_NUMBER(RE_CODE)), 0)+1 FROM REPORT),
+			#{re_type},
+			#{re_reporter},
+			#{re_res},
+			sysdate,
+			#{re_subject}
+		)
+
+	</insert>
+	
+	<insert id="insertChattingReport" parameterType="co.Nasa.prj.comm.VO.ReportVO">
+		INSERT INTO REPORT(RE_CODE, RE_TYPE, RE_REPORTER, RE_RES, RE_DATE, RE_SUBJECT,FILECODE)
+			VALUES (
+				(SELECT NVL(MAX(TO_NUMBER(RE_CODE)), 0)+1 FROM REPORT),
+				#{re_type},
+				#{re_reporter},
+				#{re_res},
+				sysdate,
+				#{re_subject},
+				#{filecode}
+			)
+	</insert>
+	
+
+	<insert id="sellerReviewReport" parameterType="co.Nasa.prj.comm.VO.ReportVO">
+		INSERT INTO REPORT(RE_CODE,RE_TYPE, RE_REPORTER, RE_RES, RE_SUBJECT ) 
+		VALUES((SELECT NVL(MAX(TO_NUMBER(RE_CODE)), 0)+1 FROM REPORT),
+			#{re_type},
+			#{re_reporter},
+			#{re_res},
+			#{re_subject})
+	</insert>
+
+	<select id="selectPagingBuyerReportList" resultType="co.Nasa.prj.comm.VO.ReportVO">
+		SELECT	*
+		FROM	(
+				 SELECT	ROWNUM RN, A.*
+				 FROM	(
+				 		 SELECT	*
+				 		 FROM	REPORT
+				 		 WHERE	RE_REPORTER = #{re_reporter}
+				 		 ORDER BY RE_DATE DESC
+				 ) A
+		)		
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id = "countPagingBuyerReport" resultType = "int">
+		SELECT	COUNT(*)
+		FROM	REPORT
+		WHERE	RE_REPORTER = #{re_reporter}
+	</select>
+	
+	<select id = "countPagingSellerReport" resultType = "int">
+		SELECT	COUNT(*)
+		FROM REPORT
+		WHERE RE_REPORTER = #{re_reporter}
+	</select>
+</mapper>

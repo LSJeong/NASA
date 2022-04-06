@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.sub_category.service.Sub_CategoryMapper">
+	<!-- sub_category 전체 리스트 조회 -->
+	<select id="sub_categoryList" resultType="co.Nasa.prj.comm.VO.SubCategoryVO">
+		SELECT	*
+		FROM	SUB_CATEGORY
+	</select>
+	
+	<select id="selectSub_category" resultType="co.Nasa.prj.comm.VO.SubCategoryVO">
+		SELECT	*
+		FROM	SUB_CATEGORY
+		WHERE	SUB_NO = #{sub_no}
+	</select>
+	
+	<select id="subcategoryCall" resultType="co.Nasa.prj.comm.VO.SubCategoryVO">
+		SELECT *
+		FROM SUB_CATEGORY
+		WHERE CAT_NO = #{cat_no}
+		ORDER BY CAT_NO
+	</select>
+</mapper>

@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.payment.service.PaymentMapper">
+   <select id="buyerPaymentList" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+      SELECT *
+      FROM PAYMENT
+      WHERE B_EMAIL = #{b_email}
+      ORDER BY PAY_DATE DESC
+   </select>
+   <select id="sellerPaymentDList" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT *
+   		FROM PAYMENT
+   		WHERE S_EMAIL = #{s_email}
+   </select>
+   <select id = "endPaymentList" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		<![CDATA[
+   		SELECT	*
+   		FROM	(
+   				 SELECT	*
+   				 FROM	PAYMENT
+   				 WHERE	B_EMAIL = #{b_email} AND PAY_ENDDATE IS NULL
+   		)
+   		WHERE	EVENT_END < SYSDATE OR EVENT_END IS NULL
+   		]]>
+   </select>
+   <update id = "paycomplete" parameterType="co.Nasa.prj.comm.VO.PaymentVO">
+   		UPDATE 	PAYMENT
+   		SET		PAY_ENDDATE = SYSDATE
+   		WHERE	PAY_CODE = #{pay_code}
+   </update>
+   
+   <select id="selectPagingBuyerPaymentList" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT	ROWNUM RN, A.*
+   				 FROM	(
+   				 		 SELECT 	*
+   				 		 FROM 		PAYMENT
+   				 		 WHERE 		B_EMAIL = #{b_email}
+   				 		 ORDER BY	PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countPagingBuyerPayment" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	PAYMENT
+   		WHERE	B_EMAIL = #{b_email}
+   </select>
+   
+   <select id="monthSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 		 SELECT	*
+   				 		 FROM		PAYMENT
+   				 		 WHERE		B_EMAIL = #{b_email} AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -1) AND SYSDATE
+   				 		 ORDER BY	PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countMonthSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	PAYMENT
+   		WHERE	B_EMAIL = #{b_email} AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -1) AND SYSDATE
+   </select>
+   
+   <select id="sixmonthSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 		 SELECT	*
+   				 		 FROM		PAYMENT
+   				 		 WHERE		B_EMAIL = #{b_email} AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -6) AND SYSDATE
+   				 		 ORDER BY	PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countSixmonthSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	PAYMENT
+   		WHERE	B_EMAIL = #{b_email} AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -6) AND SYSDATE
+   </select>
+   
+   <select id="yearSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 		 SELECT	*
+   				 		 FROM		PAYMENT
+   				 		 WHERE		B_EMAIL = #{b_email} AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -12) AND SYSDATE
+   				 		 ORDER BY	PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countYearSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	PAYMENT
+   		WHERE	B_EMAIL = #{b_email} AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -12) AND SYSDATE
+   </select>
+   
+   <select id="selectdateSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 		 SELECT	*
+   				 		 FROM		PAYMENT
+   				 		 WHERE		B_EMAIL = #{b_email} AND PAY_DATE BETWEEN #{firstDate} AND #{secondDate}
+   				 		 ORDER BY	PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countSelectdateSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	PAYMENT
+   		WHERE	B_EMAIL = #{b_email} AND PAY_DATE BETWEEN #{firstDate} AND #{secondDate}
+   </select>
+   
+   
+   <!-- 차트 입력 -->
+   <select id="selectListChart" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+      SELECT PAY_DATE,PAY_PRICE FROM PAYMENT
+   </select>
+   
+   
+   
+   
+   <!-- 테이블 입력할때 씀 -->
+   <select id="selectpaymenttable" resultType="int" parameterType="int">
+      SELECT NVL(SUM(PAY_PRICE),0)
+      FROM PAYMENT
+      WHERE SUBSTR(TO_CHAR(PAY_DATE,'yyyy-mm-dd'),6,2) =#{num}
+   </select>
+   
+   
+   
+   
+   <select id="countservice" resultType="int" parameterType="int">
+      SELECT COUNT(*) 
+      FROM PAYMENT
+      WHERE SUBSTR(TO_CHAR(PAY_DATE,'yyyy-mm-dd'),6,2) =#{num}
+   </select>
+   
+   <!-- 연도별 차트 입력 -->
+   <select id="selectListYearChart" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+      SELECT PAY_DATE,PAY_PRICE FROM PAYMENT
+   </select>
+   
+   <!-- 연도별 누적 판매금액,  수수료 -->
+   <select id="selectYearchart" resultType="int" parameterType="int">
+      SELECT NVL(SUM(PAY_PRICE),0)
+       FROM PAYMENT
+       WHERE SUBSTR(TO_DATE(PAY_DATE,'YY-MM-DD'),0,2) = #{num}
+   </select>
+   
+   <!-- 연도별 누적 판매 수량 -->
+   <select id="countYearChart" resultType="int" parameterType="int">
+       SELECT COUNT(*)
+          FROM PAYMENT
+        WHERE SUBSTR(TO_DATE(PAY_DATE,'YY-MM-DD'),0,2) = #{num}
+   </select>
+   
+
+	<!-- 채팅 결제 -->
+	<insert id="insertchatpayment"  parameterType="co.Nasa.prj.comm.VO.PaymentVO">
+INSERT INTO	PAYMENT
+	(PAY_CODE,
+	B_EMAIL,
+	S_EMAIL,
+	S_CODE,
+	PAY_CATE,
+	PAY_CATE1,
+	PAY_TYPE,
+	PAY_COUPON,
+	PAY_PRICE,
+	PAY_ENDDATE,
+	EVENT_START,
+	EVENT_END,
+	PAY_ORIGINP,
+	PAY_COM)
+	VALUES(
+	(SELECT NVL(MAX(TO_NUMBER(PAY_CODE)),0) +1 FROM PAYMENT),
+	#{b_email},
+	#{s_email},
+	#{s_code},
+	#{pay_cate},
+	'SUB2-3',
+	'PAY_TPYE',
+	#{pay_coupon},
+	#{pay_price},
+	TO_DATE(#{pay_enddate},'YYYY-MM-DD'),
+	TO_DATE(#{event_start},'YYYY-MM-DD'),
+	TO_DATE(#{event_end},'YYYY-MM-DD'),
+	#{pay_originp},
+	#{pay_com})
+</insert>
+	
+	<select id="sellerSalesData" resultType="co.Nasa.prj.comm.VO.PaymonthVO">
+		SELECT NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'01',pay_price,0)),0) AS "january", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'02',pay_price,0)),0) AS "february", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'03',pay_price,0)),0) AS "march", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'04',pay_price,0)),0) AS "april", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'05',pay_price,0)),0) AS "may", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'06',pay_price,0)),0) AS "june", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'07',pay_price,0)),0) AS "july", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'08',pay_price,0)),0) AS "august", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'09',pay_price,0)),0) AS "september", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'10',pay_price,0)),0) AS "october", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'11',pay_price,0)),0) AS "november", 
+			NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'12',pay_price,0)),0) AS "december" 
+			FROM payment 
+          WHERE  S_EMAIL= #{s_email} AND  SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),0,4)= #{year}
+          AND S_CODE = #{scode}
+	</select>
+
+	<select id="sellerCommData" resultType="co.Nasa.prj.comm.VO.PaymonthVO">
+		 SELECT 
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'01',pay_com,0)),0) AS  "january",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'02',pay_com,0)),0) AS  "february", 
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'03',pay_com,0)),0) AS  "march",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'04',pay_com,0)),0) AS  "april",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'05',pay_com,0)),0) AS  "may",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'06',pay_com,0)),0) AS  "june",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'07',pay_com,0)),0) AS  "july",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'08',pay_com,0)),0) AS  "august",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'09',pay_com,0)),0) AS  "september",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'10',pay_com,0)),0) AS  "october",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'11',pay_com,0)),0) AS  "november",
+            NVL(SUM(DECODE(SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),6,2),'12',pay_com,0)),0) AS  "december"
+          FROM payment 
+          WHERE s_email= #{s_email} and  SUBSTR(to_char(pay_enddate,'yyyy-mm-dd'),0,4) = #{year}
+          AND S_CODE = #{scode}
+	</select>
+	
+	<select id="sellerPaymentList" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+	SELECT	* 
+	FROM	(
+		 SELECT ROWNUM RN, A.*
+		 FROM	(
+			SELECT P.*, B.B_NICKNAME 
+			FROM (
+				SELECT P.*, S.SER_TITLE 
+				FROM PAYMENT P, SERVICE S 
+				WHERE P.S_CODE=S.SER_CODE 
+				AND S.S_EMAIL =  #{s_email}) P , BUYER B 
+				WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL
+				ORDER BY P.PAY_DATE DESC) A
+		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<update id="updateChaypayment" parameterType="co.Nasa.prj.comm.VO.PaymentVO">
+		UPDATE BUYER SET 
+		BUYER_COUPON ='0'
+		WHERE B_EMAIL = #{b_email}
+	</update>
+	
+	<select id="sellermonthSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	( 
+			SELECT ROWNUM RN, A.* FROM 
+				( SELECT P.*, B.B_NICKNAME FROM 
+					( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+						WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+						BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+						AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -1) AND SYSDATE 
+						ORDER BY P.PAY_DATE DESC
+					) A 
+			)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+  
+   <select id="sellercountservice" resultType="int" parameterType="hashmap">
+      SELECT COUNT(*) 
+      FROM PAYMENT
+      WHERE SUBSTR(TO_CHAR(PAY_DATE,'yyyy-mm-dd'),0,4)= #{year} AND S_CODE =  #{s_code} 
+      AND SUBSTR(TO_CHAR(PAY_DATE,'yyyy-mm-dd'),6,2) = #{str} and S_EMAIL= #{s_email}
+   </select>
+   
+   <select id="sellerTotalservice" parameterType="hashmap" resultType="co.Nasa.prj.comm.VO.PaymonthVO">
+   	SELECT NVL(COUNT(PAY_DATE),0) totalcount
+   	FROM PAYMENT  
+   	WHERE SUBSTR(TO_CHAR(PAY_DATE,'yyyy-mm-dd'),0,4)= #{year} AND S_CODE = #{s_code} 
+   	and S_EMAIL= #{s_email}
+   </select>
+   
+   <select id="sellerTotalservice2" parameterType="hashmap" resultType="co.Nasa.prj.comm.VO.PaymonthVO">
+   	SELECT NVL(SUM(PAY_PRICE),0) totalsum, NVL(SUM(PAY_COM),0) totalsusu
+   	FROM PAYMENT  
+   	WHERE SUBSTR(TO_CHAR(PAY_DATE,'yyyy-mm-dd'),0,4)= #{year} AND S_CODE = #{s_code} 
+   	and S_EMAIL= #{s_email} AND PAY_ENDDATE IS NOT NULL
+   </select>
+   
+   <select id="countPagingSellerPayment" resultType="int">
+   	select count(*) from ( SELECT P.*, B.B_NICKNAME FROM ( SELECT P.*, S.SER_TITLE 
+	FROM PAYMENT P, SERVICE S WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+	BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL ORDER BY P.PAY_DATE DESC)
+   </select>
+   
+   <select id="sellerPaymentListN" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+	   	SELECT	* 
+		FROM	(
+			 SELECT ROWNUM RN, A.*
+			 FROM	(
+				SELECT P.*, B.B_NICKNAME 
+				FROM (
+					SELECT P.*, S.SER_TITLE 
+					FROM PAYMENT P, SERVICE S 
+					WHERE P.S_CODE=S.SER_CODE 
+					AND S.S_EMAIL =  #{s_email}) P , BUYER B 
+				WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NULL
+				ORDER BY P.PAY_DATE DESC) A
+			)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+    <select id="countPagingSellerPaymentN" resultType="int">
+   	select count(*) 
+   	FROM (
+   		 SELECT P.*, B.B_NICKNAME 
+   			FROM ( SELECT P.*, S.SER_TITLE 
+					FROM PAYMENT P, SERVICE S WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+					BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NULL 
+					ORDER BY P.PAY_DATE DESC)
+   </select>
+   
+   
+   <select id="countsellermonthSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	(SELECT P.*, B.B_NICKNAME FROM 
+			( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+			WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+			BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+			AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -1) AND SYSDATE 
+			ORDER BY P.PAY_DATE DESC)
+   </select>
+   
+   
+   <select id="sellersixmonthSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 	SELECT P.*, B.B_NICKNAME FROM 
+					( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+						WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+						BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+						AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -6) AND SYSDATE
+						ORDER BY P.PAY_DATE DESC
+   				 ) A
+   		)
+   		
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countsellersixmonthSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	(SELECT P.*, B.B_NICKNAME FROM 
+				(SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+					WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+					BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+					AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -6) AND SYSDATE
+					ORDER BY P.PAY_DATE DESC)
+   </select>
+   
+   <select id="selleryearSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 		SELECT P.*, B.B_NICKNAME FROM 
+						( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+						WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+						BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+						AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -12) AND SYSDATE
+						ORDER BY P.PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countselleryearSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	(SELECT P.*, B.B_NICKNAME FROM 
+				( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+				WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+				BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+				AND PAY_DATE BETWEEN ADD_MONTHS(sysdate, -12) AND SYSDATE
+				ORDER BY P.PAY_DATE DESC)
+   </select>
+   
+   <select id="sellerselectdateSearch" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT ROWNUM RN, A.*
+   				 FROM	(
+   				 		SELECT P.*, B.B_NICKNAME FROM 
+						( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+						WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+						BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+						AND TO_CHAR(PAY_DATE, 'YYYY-MM-DD') BETWEEN TO_CHAR(#{firstDate}, 'YYYY-MM-DD') AND TO_CHAR(#{secondDate}, 'YYYY-MM-DD')
+						ORDER BY P.PAY_DATE DESC
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="countsellerselectdateSearch" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	(SELECT P.*, B.B_NICKNAME FROM 
+				( SELECT P.*, S.SER_TITLE FROM PAYMENT P, SERVICE S 
+				WHERE P.S_CODE=S.SER_CODE AND S.S_EMAIL = #{s_email}) P , 
+				BUYER B WHERE P.B_EMAIL = B.B_EMAIL AND PAY_ENDDATE IS NOT NULL  
+				AND TO_CHAR(PAY_DATE, 'YYYY-MM-DD') BETWEEN TO_CHAR(#{firstDate}, 'YYYY-MM-DD') AND TO_CHAR(#{secondDate}, 'YYYY-MM-DD')
+				ORDER BY P.PAY_DATE DESC)
+   </select>
+   
+	<select id="CalendarList" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+		SELECT * FROM V_CALENDAR
+		WHERE B_EMAIL = #{b_email}
+	</select>
+	
+	<select id="CalendarListS" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+		SELECT * FROM V_CALENDAR
+		WHERE S_EMAIL = #{s_email}
+	</select>
+
+	<update id="purchaseconfirm" >
+	<![CDATA[
+		UPDATE PAYMENT SET PAY_ENDDATE = sysdate
+		WHERE  (TO_CHAR(EVENT_END+7, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+				AND EVENT_END IS NOT NULL AND PAY_ENDDATE IS NULL)
+			OR
+			 (TO_CHAR(PAY_DATE+7, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+			 AND EVENT_END IS NULL AND PAY_ENDDATE IS NULL)
+	]]>
+	</update>
+
+	<select id="selectBuyerCalendar" parameterType="String" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+		select * from v_calendar
+		where b_email = #{b_email} and ser_title = #{ser_title} and pay_code = #{pay_code}
+	</select>
+	
+	<select id="selectSellerCalendar" parameterType="String" resultType="co.Nasa.prj.comm.VO.PaymentVO">
+		select * from v_calendar
+		where s_email = #{s_email} and b_nickname = #{b_nickname} and pay_code = #{pay_code}
+	</select>
+	
+	<select id="countReviewPayment" resultType = "int">
+		SELECT	COUNT(*)
+		FROM	PAYMENT
+		WHERE	B_EMAIL = #{b_email}
+		AND		PAY_ENDDATE IS NOT NULL
+		AND		S_CODE = #{s_code}
+	</select>
+  
+</mapper>

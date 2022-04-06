@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.login.service.BuyerJoinMapper">
+<select id="checkEmail" parameterType="String" resultType="int">
+
+select a.email+b.email+c.email
+from
+(select count(*) email from buyer where b_email=#{email} )a,
+(select count(*) email from seller where s_email=#{email} )b,
+(select count(*) email from admin where aid=#{email} )c
+
+</select>
+
+<select id="checkNick" parameterType="String" resultType="int">
+
+select a.nickname+b.nickname
+from
+(select count(*) nickname from buyer where b_nickname=#{nickname} )a,
+(select count(*) nickname from seller where s_nickname=#{nickname} )b
+
+</select>
+
+</mapper>

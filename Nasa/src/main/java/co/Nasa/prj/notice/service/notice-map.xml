@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.notice.service.NoticeMapper">
+
+	<insert id="noticeInsert"
+		parameterType="co.Nasa.prj.comm.VO.NoticeVO">
+
+INSERT INTO NOTICE(no_code,
+		no_id,
+		no_title,
+		no_subject,
+		no_date,
+		filecode,
+		no_status)
+		VALUES((SELECT NVL(MAX(NO_CODE),0)+1 FROM NOTICE ),'첫번째','title',
+		'첫번째',sysdate,'첫번째11232','공지사항1')
+		
+
+	</insert>
+	
+	<insert id="knowhowInsert" parameterType="co.Nasa.prj.comm.VO.NoticeVO">
+		INSERT INTO NOTICE(no_code, no_id, no_title, no_subject, no_status, no_img, no_originimg)
+		VALUES((SELECT NVL(MAX(NO_CODE),0)+1 FROM NOTICE ),#{no_id},#{no_title},
+		#{no_subject},'1',#{no_img}, #{no_originimg})
+	</insert>
+	
+	<select id="knowhowSelectList" resultType="co.Nasa.prj.comm.VO.NoticeVO">
+		SELECT
+		S.S_NICKNAME, N.NO_CODE, N.NO_ID, N.NO_TITLE, N.NO_SUBJECT, TO_CHAR(N.NO_DATE, 'YYYY-MM-DD') NO_DATE,
+		N.FILECODE, N.NO_STATUS, N.NO_IMG, N.NO_ORIGINIMG
+		FROM SELLER S, NOTICE N
+		WHERE S.S_EMAIL = NO_ID AND NO_STATUS='1'
+		ORDER BY NO_CODE DESC
+	</select>
+	
+	<select id="knowhowSelect" resultType="co.Nasa.prj.comm.VO.NoticeVO">
+		SELECT
+		S.S_NICKNAME, N.NO_CODE, N.NO_ID, N.NO_TITLE, N.NO_SUBJECT, TO_CHAR(N.NO_DATE, 'YYYY-MM-DD') NO_DATE,
+		N.FILECODE, N.NO_STATUS, N.NO_IMG, N.NO_ORIGINIMG
+		FROM SELLER S, NOTICE N
+		WHERE S.S_EMAIL = NO_ID AND NO_CODE = #{no_code}
+	</select>
+	
+	<delete id="knowhowDelete" parameterType="String">
+		DELETE FROM NOTICE
+		WHERE NO_CODE = #{no_code}
+	</delete>
+	
+	<update id="knowhowUpdate" parameterType="co.Nasa.prj.comm.VO.NoticeVO">
+		UPDATE NOTICE SET
+		NO_TITLE = #{no_title}, NO_SUBJECT = #{no_subject},
+		NO_IMG = #{no_img}, NO_ORIGINIMG = #{no_originimg}
+		WHERE NO_CODE = #{no_code}
+	</update>
+	
+	<select id="knowhowList" resultType="co.Nasa.prj.comm.VO.NoticeVO">
+	SELECT	*
+	FROM	(
+			 SELECT ROWNUM RN, A.*
+			 FROM	(
+				SELECT n.*, s.s_nickname
+				FROM NOTICE n, seller s
+				WHERE NO_ID = #{no_id} AND NO_ID = S_EMAIL AND NO_STATUS = '1'
+				ORDER BY NO_DATE DESC
+		 	) A
+   		)
+	WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="countPagingKnowhow" resultType="int">
+   		SELECT COUNT(*) 
+   		FROM ( 
+	   		SELECT *
+			FROM NOTICE
+			WHERE NO_ID = #{no_id} AND NO_STATUS = '1')
+   </select>
+   
+   <select id="pagingKnowhowList" resultType="co.Nasa.prj.comm.VO.NoticeVO">
+   		SELECT	*
+   		FROM	(
+   				 SELECT	ROWNUM RN, A.*
+   				 FROM	(
+   				 		 SELECT
+   				 		 S.S_NICKNAME, N.NO_CODE, N.NO_ID, N.NO_TITLE, N.NO_SUBJECT, TO_CHAR(N.NO_DATE, 'YYYY-MM-DD') NO_DATE,
+						 N.FILECODE, N.NO_STATUS, N.NO_IMG, N.NO_ORIGINIMG
+   				 		 FROM	NOTICE N, SELLER S
+   				 		 WHERE	NO_STATUS = '1'
+   				 		 AND	N.NO_ID = S.S_EMAIL
+   				 ) A
+   		)
+   		WHERE	RN BETWEEN #{start} AND #{end}
+   </select>
+   <select id="countPagingKnowhowList" resultType="int">
+   		SELECT	COUNT(*)
+   		FROM	NOTICE
+   		WHERE	NO_STATUS = '1'
+   </select>
+</mapper>

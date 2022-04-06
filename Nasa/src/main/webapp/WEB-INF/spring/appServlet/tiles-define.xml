@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<!-- 관리자 링크 -->
+	<definition name="Nasaadmin.project" template="/WEB-INF/views/tiles/admin/layout.jsp">
+		<put-attribute name="title" value="Nasa admin" />
+		<put-attribute name="header" value="/WEB-INF/views/tiles/admin/header.jsp" />
+		<put-attribute name="menu" value="/WEB-INF/views/tiles/admin/menu.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/views/tiles/admin/footer.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<!-- 관리자 -->
+	<definition name="admin/*/*" extends="Nasaadmin.project">
+		<put-attribute name="body" value="/WEB-INF/views/admin/{1}/{2}.jsp" />
+	</definition>
+	
+	<!-- 사용자 링크 -->
+	<definition name="Nasauser.project" template="/WEB-INF/views/tiles/user/layout.jsp">
+		<put-attribute name="title" value="Nasa seller" />
+		<put-attribute name="header" value="/WEB-INF/views/tiles/user/header.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/views/tiles/user/footer.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<!-- 사용자 -->
+	<definition name="user/*" extends="Nasauser.project">
+		<put-attribute name="body" value="/WEB-INF/views/user/{1}.jsp" />
+	</definition>
+	
+	<!-- 판매자 -->
+	<definition name="seller/*" extends="Nasauser.project">
+		<put-attribute name="body" value="/WEB-INF/views/seller/{1}.jsp" />
+	</definition>
+	
+	<!-- 구매자 -->
+	<definition name="buyer/*" extends="Nasauser.project">
+		<put-attribute name="body" value="/WEB-INF/views/buyer/{1}.jsp" />
+	</definition>
+	
+	
+	
+</tiles-definitions>

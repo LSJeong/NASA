@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.admin.member.service.AdminMemberMapper">
+
+  <sql id="buyerCriteria"> 
+  	<if test= "b_email!=null and !b_email.equals('')">
+  	    AND b_email like '%'||#{b_email}||'%'
+  	 </if>
+  	 
+  	 <if test="b_nickname!=null and !b_nickname.equals('')">
+  	     AND b_nickname like '%'||#{b_nickname}||'%'
+  	</if>
+  	
+  	<if test="b_name!=null and !b_name.equals('')">
+  	     AND b_name like '%'||#{b_name}||'%'
+  	</if>
+  	
+  	<if test="b_tel!=null and !b_name.equals('')">
+  	     AND b_tel like '%'||#{b_tel}||'%'
+  	</if>
+  	
+  	<if test="b_address!=null and !b_address.equals('')">
+  	     AND b_address like '%'||#{b_address}||'%'
+  	</if>
+  	
+  	<if test="b_rank!=null and !b_rank.equals('')">
+  	     AND b_rank like '%'||#{b_rank}||'%'
+  	</if>
+  	
+  	<if test="b_date!=null and !b_date.equals('')">
+  	   <![CDATA[
+  	     AND to_char(b_date,'yyyy-mm-dd') between #{b_date} and #{b_date2}
+  	  ]]>   
+     </if>
+   </sql>
+   
+   <select id="todayNewBuyer" resultType="int">
+  		SELECT COUNT(*) FROM BUYER WHERE to_char(b_date,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd') 
+    </select>
+    
+   <select id="todayWithdrawalBuyer" resultType="int">
+   		SELECT count(*) FROM buyer WHERE b_status='B'
+   </select>
+ 
+	
+	<select id="selectBuyer" parameterType="String" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		 SELECT b_email,b_rank,b_password,b_nickname,b_tel,
+		        b_address,b_zipcode,b_detailaddress,b_author,b_img,
+				b_status,b_date,b_report,token,
+                (select c.cat_name from category c join sub_category s on(c.cat_no=s.cat_no) where buyer.field_code=s.sub_no) as cat_name,
+                (select sub_name from sub_category where sub_no=buyer.field_code)as field_code, buyer_coupon,b_name,blacklistdate
+		FROM buyer
+		WHERE B_EMAIL= #{b_email}
+		
+	</select>
+	
+	<select id="selectBuyerPayment" parameterType="co.Nasa.prj.admin.service.Criteria" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		<![CDATA[
+		  SELECT *
+			FROM 
+			    (
+			    select rownum rn, b.pay_code, b.b_email, b.s_email, b.s_code,b.pay_date,b.pay_cate, b.pay_cate1,b.pay_type,b.pay_coupon,
+			                      b.pay_price,b.pay_enddate,b.event_start,b.event_end,
+			                      b.ser_code,b.pro_code,b.ser_start,b.ser_title,b.ser_sub,b.ser_price,
+			                      b.ser_sale,b.ser_date,b.ser_line,b.ser_team
+			    from v_buyerpayment b
+			    WHERE b_email=#{b_email} AND ROWNUM <=#{pageNum} * #{amount}
+			    )
+		
+		  WHERE rn>(#{pageNum}-1)*#{amount}
+		]]>
+		
+		
+	</select>
+	
+	
+	
+	    
+     <sql id="sellerCriteria"> 
+	  	<if test= "s_email!=null and !s_email.equals('')">
+	  	    AND s_email like '%'||#{s_email}||'%'
+	  	 </if>
+	  	 
+	  	 <if test="s_nickname!=null and !s_nickname.equals('')">
+	  	     AND s_nickname like '%'||#{s_nickname}||'%'
+	  	</if>
+	  	
+	  	<if test="s_name!=null and !s_name.equals('')">
+	  	     AND s_name like '%'||#{s_name}||'%'
+	  	</if>
+	  	
+	  	<if test="s_tel!=null and !s_tel.equals('')">
+	  	     AND s_tel like '%'||#{s_tel}||'%'
+	  	</if>
+	  	
+	  	<if test="s_rank!=null and !s_rank.equals('')">
+	  	     AND s_rank like '%'||#{s_rank}||'%'
+	  	</if>
+	  	
+	  	<if test="s_address!=null and !s_address.equals('')">
+	  	     AND s_address like '%'||#{s_address}||'%'
+	  	</if>
+	  	
+	  	<if test="s_rank!=null and !s_rank.equals('')">
+	  	     AND s_rank = #{s_rank}
+	  	</if>
+	  	
+	  	<if test="s_date!=null and !s_date.equals('')">
+	  	   <![CDATA[
+	  	     AND to_char(s_date,'yyyy-mm-dd') between #{s_date} and #{s_date2}
+	  	  ]]>   
+     </if>
+  	
+  </sql>
+	
+	<select id="sellerList" parameterType="co.Nasa.prj.admin.service.Criteria" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		<![CDATA[
+		 SELECT *
+		 FROM 
+		     (
+		      SELECT rownum rn, s.*
+		      FROM
+		           (
+		             select s_email, s_rank,s_tel,s_address,s_nickname,
+		                    s_zipcode,s_detailaddress,s_author,s_img,
+					        s_business,s_status,s_report,s_school,s_major,s_grad, s_carrer,s_me,s_name,s_date,blacklistdate
+					 from seller
+					 where s_status!='B'
+					 order by s_email 
+					 )s
+		      where
+			   rownum <= #{pageNum} * #{amount}
+			   
+	    ]]>
+	     <include refid="sellerCriteria"></include>
+	    <![CDATA[
+			)
+			
+		where rn > (#{pageNum}-1)*#{amount}
+		
+		]]>
+	
+	</select>
+	
+	<select id="selectSellerServiceList" parameterType="co.Nasa.prj.admin.service.Criteria" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+	
+	   		<![CDATA[
+				  SELECT *
+					FROM 
+					    (
+					    select rownum rn, s.*,(select s_grad from seller where s.s_email=s_email)as s_grade
+					    from v_sellerservicelist s
+					    WHERE s_email=#{s_email} AND ROWNUM <=#{pageNum} * #{amount}
+					    )
+				
+				  WHERE rn>(#{pageNum}-1)*#{amount}
+				]]>
+
+	</select>
+	
+	<select id="getListWithPaging" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		<![CDATA[
+		 SELECT *
+		 FROM 
+		     (
+		      SELECT rownum rn, b.*
+		      FROM 
+		          (  SELECT b_email,b_rank,b_password,b_nickname,b_tel,
+		                    b_address,b_zipcode,b_detailaddress,b_author,b_img,
+					        b_status,b_date,b_report,token,
+                            (select c.cat_name from category c join sub_category s on(c.cat_no=s.cat_no) where buyer.field_code=s.sub_no) as cat_name,
+                            (select sub_name from sub_category where sub_no=buyer.field_code)as field_code, buyer_coupon,b_name,blacklistdate
+					 FROM buyer
+					 WHERE b_status !='B'
+					 ORDER BY b_email
+				  )b
+		          
+		      WHERE
+			   rownum <= #{pageNum} * #{amount}
+			   
+	    ]]>
+	     <include refid="buyerCriteria"></include>
+	    <![CDATA[
+			)
+			
+		where rn > (#{pageNum}-1)*#{amount}
+		
+		]]>
+	
+	</select>
+	
+	<select id="getBuyerTotal" resultType="int">
+		select count(*) as total from buyer where b_status !='B'
+	</select>
+	
+	<select id="searchBuyerTotal" resultType="int">
+		select count(*)
+		from buyer
+		where  b_status !='B'
+		
+		<include refid="buyerCriteria"></include>
+		
+	</select>
+	
+	<select id="selectSeller" parameterType="String" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		SELECT * FROM SELLER
+		WHERE S_EMAIL= #{s_email}
+		
+	</select>
+	
+	<select id="getSellerTotal" resultType="int">
+		select count(*) as total from seller
+		where s_status!='B'
+		
+		<include refid="sellerCriteria"></include>	
+		
+	</select>
+	
+	<select id="totalSeller" resultType="int">
+		select count(*) from seller
+		where s_status!='B'
+	</select>
+	
+	<select id="todayNewSeller" resultType="int">
+	  SELECT COUNT(*) FROM SELLER WHERE to_char(s_date,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd') 
+	</select>
+	
+	<select id="todayWithdrawalSeller" resultType="int">
+	  SELECT COUNT(*) FROM SELLER WHERE s_status='B'
+	</select>
+	
+	<update id="updateMemberRank" parameterType="co.Nasa.prj.comm.VO.BuyerVO">
+		update buyer
+		set b_rank = #{b_rank}
+		where b_email=#{b_email}
+	
+	</update>
+	
+	<update id="updateSellerRank" parameterType="co.Nasa.prj.comm.VO.SellerVO">
+		update seller
+		set s_rank = #{s_rank}
+		where s_email=#{s_email}
+	
+	</update>
+	
+	<select id="buyerAllList" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		
+	</select>
+</mapper>

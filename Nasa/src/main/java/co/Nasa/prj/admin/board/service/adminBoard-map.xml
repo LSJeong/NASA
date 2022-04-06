@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.admin.board.service.AdminBoardMapper">
+
+<sql id="boardCriteria">
+   	<if test= "no_id!=null and !no_id.equals('')">
+  	    AND no_id like '%'||#{no_id}||'%'
+  	 </if>
+  	 
+  	 <if test="no_title!=null and !no_title.equals('')">
+  	     AND no_title like '%'||#{no_title}||'%'
+  	</if>
+  	
+  	<if test="no_date!=null and !no_date.equals('')">
+  	   <![CDATA[
+  	     AND to_char(no_date,'yyyy-mm-dd') between #{no_date} and #{no_date}
+  	  ]]>   
+     </if>
+
+</sql>
+ <select id="getSelelrBoardWithPaging" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+   <![CDATA[
+		  SELECT * FROM 
+          ( select rownum rn, A.*
+            FROM ( 
+                   SELECT NO_CODE,NO_ID,NO_TITLE,NO_SUBJECT,NO_DATE,FILECODE,NO_STATUS,
+                          NO_IMG,NO_ORIGINIMG 
+                   FROM NOTICE WHERE NO_STATUS='1'
+                   ORDER BY NO_CODE DESC) A
+            WHERE rownum <= #{pageNum} * #{amount} 
+		]]>	    
+		    <include refid="boardCriteria"></include> 
+		<![CDATA[
+			        ) 
+    		WHERE rn>(#{pageNum}-1)*#{amount}
+		]]>
+ </select>
+ 
+  <select id="searchBoardTotal" resultType="int">
+ 	 SELECT count(*)
+     FROM NOTICE 
+     WHERE NO_STATUS='1'
+    
+        <include refid="boardCriteria"></include> 
+     
+ </select>
+ 
+ <select id="totalBoard" resultType="int">
+ 	 SELECT count(*)
+     FROM NOTICE WHERE NO_STATUS='1'
+ </select>
+ 
+ <select id="getBoardInfo" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+ 	       SELECT n.NO_CODE,n.NO_ID,n.NO_TITLE,n.NO_SUBJECT,n.NO_DATE,n.FILECODE,n.NO_STATUS,
+           n.NO_IMG,n.NO_ORIGINIMG,
+           (select s_status from seller where s_email=n.no_id) as s_status,
+           (select s_report from seller where s_email=n.no_id) as s_report,
+           (select s_rank from seller where s_email=n.no_id) as s_rank
+    	  FROM NOTICE n WHERE NO_STATUS='1' and no_code=#{no_code}
+ </select>
+ 
+ <select id="todayTotalBoard" resultType="int">
+  	 SELECT count(*)
+     FROM NOTICE 
+     WHERE NO_STATUS='1' and to_char(no_date,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd')
+ </select>
+ 
+
+</mapper>

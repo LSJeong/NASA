@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.seller.service.SellerMapper">
+
+	<select id="SellerNicknameCheck" resultType="int">
+		select count(*) from seller
+		where s_nickname=#{s_nickname}
+	</select>	
+
+	<select id="selectSellerList" resultType="co.Nasa.prj.comm.VO.SellerVO">
+		SELECT *
+		FROM SELLER
+  	</select>
+
+	<select id="SellerEmailCheck" resultType="int">
+		select count(email) from vw_member_report where email=#{s_email}
+	</select>
+	
+	<insert id="SellerInsert" parameterType="co.Nasa.prj.comm.VO.SellerVO">
+		insert into seller (s_email, s_password, s_nickname, s_tel, s_address, s_zipcode, s_detailaddress, s_author, s_name)
+		values (#{s_email}, #{s_password}, #{s_nickname}, #{s_tel}, #{s_address}, #{s_zipcode}, #{s_detailaddress}, #{s_author}, #{s_name})	
+	</insert>
+	
+	<update id="SellerUpdate" parameterType="co.Nasa.prj.comm.VO.SellerVO">
+		update seller
+		set
+		s_me = #{s_me}, s_school = #{s_school}, s_major = #{s_major}, s_carrer = #{s_carrer}, s_grad = #{s_grad}, s_img = #{s_img}
+		where s_email = #{s_email}
+	</update>
+	
+	<select id="SellerSelect" resultType="co.Nasa.prj.comm.VO.SellerVO">
+      SELECT TO_CHAR(S_DATE, 'YYYY-MM-DD') AS S_DATES, S_NAME, S_EMAIL, S_RANK, S_PASSWORD, S_NICKNAME, 
+      S_TEL, S_ADDRESS, S_ZIPCODE, S_DETAILADDRESS, S_AUTHOR, S_IMG, S_BUSINESS, S_REPORT, 
+      S_SCHOOL, S_MAJOR, S_GRAD, S_CARRER, S_ME
+      FROM SELLER
+      WHERE s_email = #{s_email}
+   </select>
+	
+	<select id="SellerNickSelect" resultType="co.Nasa.prj.comm.VO.SellerVO"
+	parameterType="co.Nasa.prj.comm.VO.ServiceVO">
+		SELECT *
+		FROM SELLER 
+		WHERE S_NICKNAME = #{s_nickname}
+	</select>
+	
+	<update id="SellerProfileUpdate" parameterType="co.Nasa.prj.comm.VO.SellerVO">
+		UPDATE SELLER SET
+		S_PASSWORD = #{s_password}, S_NICKNAME = #{s_nickname},
+		S_TEL = #{s_tel}, S_ADDRESS = #{s_address}, S_ZIPCODE = #{s_zipcode},
+		S_DETAILADDRESS = #{s_detailaddress}, S_IMG = #{s_img}, S_NAME = #{s_name},
+		S_ME = #{s_me}, S_SCHOOL = #{s_school}, S_MAJOR = #{s_major}, S_GRAD = #{s_grad}, S_CARRER = #{s_carrer}
+		WHERE s_email = #{s_email}
+	</update>
+	
+	<select id="chatsellerselect" resultType="co.Nasa.prj.comm.VO.SellerVO" parameterType="co.Nasa.prj.comm.VO.SellerVO">
+		SELECT S_EMAIL ,S_NICKNAME,S_IMG
+		FROM SELLER
+		WHERE S_EMAIL = #{s_email}
+		UNION all
+		SELECT B_EMAIL AS S_EMAIL,B_NICKNAME AS S_NICKNAME, B_IMG AS S_IMG
+		FROM BUYER
+		WHERE B_EMAIL = #{s_email}		
+	</select>
+	
+	<select id="ChatSellerselect" resultType="co.Nasa.prj.comm.VO.SellerVO">
+		SELECT * 
+		FROM SELLER
+		WHERE s_email = #{s_email}
+	</select>
+	
+	<select id="bestSellerList" resultType="co.Nasa.prj.comm.VO.SellerVO">
+		SELECT DISTINCT
+		S.*, (SELECT COUNT(S_ID) FROM WISHLIST WHERE S_STATUS='U' AND S_ID = S.S_EMAIL) AS WISHCOUNT
+		FROM SELLER S, WISHLIST W
+		WHERE S.S_EMAIL = W.S_ID
+		ORDER BY WISHCOUNT DESC
+	</select>
+	
+	<select id="sellerRank" resultType="int">
+		SELECT RANK 
+		FROM (SELECT S.S_EMAIL, COUNT(*), RANK() OVER (ORDER BY COUNT(*) DESC) AS RANK 
+				FROM REVIEW R, SERVICE S 
+				WHERE SER_CODE = SCODE 
+				GROUP BY S.S_EMAIL ORDER BY COUNT(*) DESC) 
+		WHERE S_EMAIL = #{s_email}
+	</select>
+	
+	<update id = "deleteSeller" parameterType="co.Nasa.prj.comm.VO.SellerVO">
+		UPDATE	SELLER
+		SET		S_STATUS = 'D'
+		WHERE	S_EMAIL = #{s_email}
+	</update>
+</mapper>

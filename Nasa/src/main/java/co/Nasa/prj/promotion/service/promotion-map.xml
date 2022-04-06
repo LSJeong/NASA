@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.promotion.service.PromotionMapper">
+
+<insert id="promotionInsert" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	<selectKey keyProperty="pro_code" resultType="string" order="BEFORE">
+      SELECT NVL(MAX(TO_NUMBER(pro_code)),0)+1 FROM PROMOTION   
+   </selectKey>
+	INSERT INTO PROMOTION
+	VALUES(#{pro_code},#{s_email},#{prodiscount},TO_DATE(#{pro_start},'YYYY-MM-DD'), TO_DATE(#{pro_end},'YYYY-MM-DD'), #{pro_service},#{pro_status})
+</insert>
+
+<select id="promotionList" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	SELECT	*
+	FROM	(
+			 SELECT ROWNUM RN, A.*
+			 FROM	(
+				SELECT P.*, S.SER_TITLE, S.SER_IMG 
+				FROM PROMOTION P, SERVICE S 
+				WHERE P.PRO_SERVICE = S.SER_CODE
+				AND S.S_EMAIL = #{s_email}
+				AND P.PRO_STATUS = 'N'
+				ORDER BY P.PRO_START
+			) A
+		)
+	WHERE	RN BETWEEN #{start} AND #{end}
+</select>
+
+<select id="endPromotion" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	<![CDATA[
+	SELECT MAX(PRO_END) 
+	FROM PROMOTION 
+	WHERE PRO_SERVICE = #{pro_service}
+	AND TO_CHAR(SYSDATE, 'YYYY-MM-DD') < TO_CHAR(PRO_END, 'YYYY-MM-DD')]]>
+</select>
+
+<select id="promotionCheck" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	<!-- SELECT *
+	FROM PROMOTION
+	WHERE PRO_SERVICE = #{pro_service} 
+	AND #{pro_start} BETWEEN PRO_START AND PRO_END -->
+	<![CDATA[
+	SELECT * FROM PROMOTION WHERE PRO_SERVICE = #{pro_service}
+	AND (TO_DATE(#{pro_start}, 'YYYY-MM-DD') >= pro_start and TO_DATE(#{pro_start}, 'YYYY-MM-DD') <= pro_end
+	OR TO_DATE(#{pro_end}, 'YYYY-MM-DD') >= pro_start and TO_DATE(#{pro_end}, 'YYYY-MM-DD') <= pro_end) 
+	AND pro_status <> 'Y']]>
+</select>
+
+<delete id="promotionCancel" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	DELETE FROM PROMOTION
+	WHERE PRO_SERVICE = #{pro_service} AND PRO_CODE = #{pro_code}
+</delete>
+
+<update id="promotionEnd" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	UPDATE PROMOTION SET 
+	PRO_STATUS = 'Y', PRO_END = sysdate
+	WHERE PRO_SERVICE = #{pro_service} AND PRO_CODE = #{pro_code}
+</update>
+
+<update id="startCheckPromotion">
+	<![CDATA[
+	UPDATE PROMOTION 
+	SET PRO_STATUS='N' 
+	WHERE TO_CHAR(PRO_START, 'YYYY-MM-DD') <= TO_CHAR(sysdate,'yyyy-mm-dd')
+	AND PRO_STATUS = 'U']]>
+</update>
+
+<update id="endCheckPromotion">
+	<![CDATA[
+	UPDATE PROMOTION 
+	SET PRO_STATUS = 'Y' 
+	WHERE TO_CHAR(PRO_END, 'YYYY-MM-DD') < TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+	AND PRO_STATUS = 'N']]>
+</update>
+
+<select id="promotionSelectList" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	<![CDATA[
+	SELECT *
+	FROM PROMOTION
+	WHERE S_EMAIL = #{s_email}
+	AND PRO_SERVICE = #{pro_service}
+	AND PRO_END >= TO_DATE(#{pro_end}, 'YYYY-MM-DD')
+	AND PRO_STATUS <> 'Y']]>
+</select>
+
+<update id="serviceEndPromotion" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	UPDATE PROMOTION SET 
+	PRO_STATUS = 'Y' , PRO_END = TO_DATE(#{pro_end}, 'YYYY-MM-DD')
+	WHERE PRO_SERVICE = #{pro_service} AND PRO_CODE = #{pro_code}
+</update>
+
+<update id="serviceEndPromotion2" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	UPDATE PROMOTION SET 
+	PRO_END = TO_DATE(#{pro_end}, 'YYYY-MM-DD')
+	WHERE PRO_SERVICE = #{pro_service} AND PRO_CODE = #{pro_code}
+</update>
+
+<select id="countPagingPromotion" resultType="int">
+	SELECT COUNT(*)
+	FROM (SELECT P.*, S.SER_TITLE, S.SER_IMG 
+	FROM PROMOTION P, SERVICE S 
+	WHERE P.PRO_SERVICE = S.SER_CODE
+	AND S.S_EMAIL = #{s_email} AND P.PRO_STATUS = 'N' )
+</select>
+
+<select id="promotionListU" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	SELECT	*
+	FROM	(
+			 SELECT ROWNUM RN, A.*
+			 FROM	(
+				SELECT P.*, S.SER_TITLE, S.SER_IMG 
+				FROM PROMOTION P, SERVICE S 
+				WHERE P.PRO_SERVICE = S.SER_CODE
+				AND S.S_EMAIL = #{s_email}
+				AND P.PRO_STATUS = 'U'
+				ORDER BY P.PRO_START
+			) A
+		)
+	WHERE	RN BETWEEN #{start} AND #{end}
+</select>
+
+<select id="promotionListY" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	SELECT	*
+	FROM	(
+			 SELECT ROWNUM RN, A.*
+			 FROM	(
+				SELECT P.*, S.SER_TITLE, S.SER_IMG 
+				FROM PROMOTION P, SERVICE S 
+				WHERE P.PRO_SERVICE = S.SER_CODE
+				AND S.S_EMAIL = #{s_email}
+				AND P.PRO_STATUS = 'Y'
+				ORDER BY P.PRO_START
+			) A
+		)
+	WHERE	RN BETWEEN #{start} AND #{end}
+</select>
+
+<select id="countPagingPromotionU" resultType="int">
+	SELECT COUNT(*)
+	FROM (SELECT P.*, S.SER_TITLE, S.SER_IMG 
+	FROM PROMOTION P, SERVICE S 
+	WHERE P.PRO_SERVICE = S.SER_CODE
+	AND S.S_EMAIL = #{s_email} AND P.PRO_STATUS = 'U' )
+</select>
+
+<select id="countPagingPromotionY" resultType="int">
+	SELECT COUNT(*)
+	FROM (SELECT P.*, S.SER_TITLE, S.SER_IMG 
+	FROM PROMOTION P, SERVICE S 
+	WHERE P.PRO_SERVICE = S.SER_CODE
+	AND S.S_EMAIL = #{s_email} AND P.PRO_STATUS = 'Y' )
+</select>
+
+<update id="DirectPromEnd" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	<![CDATA[
+	UPDATE PROMOTION SET
+	PRO_END = sysdate, PRO_STATUS = 'Y'
+	WHERE PRO_SERVICE = #{pro_service} AND PRO_STATUS <> 'Y'
+	AND S_EMAIL = #{s_email}
+	]]>
+</update>
+
+<delete id="DirectPromCancel" parameterType="co.Nasa.prj.comm.VO.PromotionVO">
+	DELETE FROM PROMOTION
+	WHERE PRO_SERVICE = #{pro_service}
+	AND PRO_STATUS = 'U'
+	AND S_EMAIL = #{s_email}
+</delete>
+
+<select id="goingSelectPromo" resultType="co.Nasa.prj.comm.VO.PromotionVO">
+	SELECT TRUNC(S.SER_PRICE-(SER_PRICE * (PRODISCOUNT / 100))) AS PRODISCOUNT
+	FROM PROMOTION P JOIN SERVICE S
+    ON P.PRO_SERVICE = S.SER_CODE
+	WHERE PRO_SERVICE = #{ser_code} AND PRO_STATUS = 'N'
+</select>
+</mapper>

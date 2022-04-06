@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.admin.service.AdminServiceMapper">
+	<sql id="serviceCriteria">
+		<if test= "s_email!=null and !s_email.equals('')">
+	  	    AND s_email like '%'||#{s_email}||'%'
+	  	 </if>
+	  	 
+	  	 <if test="ser_title!=null and !ser_title.equals('')">
+	  	     AND ser_title like '%'||#{ser_title}||'%'
+	  	</if>
+	  	
+	  	<if test="ser_line!=null and !ser_line.equals('')">
+	  	     AND ser_line = #{ser_line}
+	  	</if>
+	  	
+	  	<if test="ser_team!=null and !ser_team.equals('')">
+	  	     AND ser_team = #{ser_team}
+	  	</if>
+	  	
+	  	<if test="s_name!=null and !s_name.equals('')">
+	  	     AND s_name like '%'||#{s_name}||'%'
+	  	</if>
+	  	
+	  	<if test="cat_no!=null and !cat_no.equals('')">
+	  	     AND cat_no = #{cat_no}
+	  	</if>
+	  	
+	  	<if test="sub_no!=null and !sub_no.equals('')">
+	  	     AND sub_no = #{sub_no}
+	  	</if>
+	  	
+	 
+	
+	</sql>
+	<select id="getServiceListWithPaging" resultType="co.Nasa.prj.comm.VO.ServiceVO">
+	    <![CDATA[
+		  SELECT * FROM 
+          ( select rownum rn, A.*
+            FROM (SELECT v.*,s.s_name,s.s_nickname,s.s_tel,s.s_author
+                    from vw_selectservice v join seller s 
+                    on(v.s_email=s.s_email)           
+            order by ser_code desc) A
+            where rownum <= #{pageNum} * #{amount} 
+		]]>	    
+		    <include refid="serviceCriteria"></include> 
+		<![CDATA[
+			        ) 
+    		WHERE rn>(#{pageNum}-1)*#{amount}
+		]]>
+	</select>
+	
+	<select id="searchTotalService" resultType="int">
+		SELECT COUNT(*) FROM vw_selectservice
+		<trim prefix="WHERE" prefixOverrides="AND">
+			 <include refid="serviceCriteria"></include> 
+		</trim>
+	</select>
+	
+	<select id="totalService" resultType="int">
+		SELECT COUNT(*) FROM SERVICE
+	</select>
+	
+	<select id="todayService" resultType="int">
+		SELECT COUNT(*) FROM SERVICE 
+		WHERE to_char(ser_start,'yyyy-mm-dd')=to_char(sysdate,'yyyy-mm-dd') 
+	</select>
+	
+	<select id="detailedService" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+	     SELECT ser_code,pro_code,s_email,cat_no,cat_name,sub_no,sub_name,ser_start,ser_end,
+		        ser_title,ser_sub,to_char(ser_price,'fm999,999,999,999') as ser_price,ser_sale,
+		        ser_date,ser_img,ser_offer,ser_imgorigin,ser_line,
+		        ser_skill,ser_team, ser_lang,ser_frame,ser_subimg,ser_subimg2,ser_subimg3,ser_originsub,
+		        ser_originsub3,ser_status,ser_reason
+	    FROM vw_selectservice
+	    WHERE SER_CODE =#{ser_code}
+	</select>
+	
+	<select id="totalPay" resultType="String">
+		SELECT to_char(sum(pay_price),'fm999,999,999,999') total_price
+		FROM PAYMENT
+		WHERE s_code=#{s_code}
+	</select>
+	
+	<select id="totalReview" resultType="int">
+		SELECT COUNT(*)
+		FROM REVIEW
+		WHERE scode=#{scode}
+	</select>
+	
+	<select id="promotionService" resultType="co.Nasa.prj.admin.service.AdminAuthorVO">
+		SELECT ser_code,pro_status,prodiscount,ser_sale_com ,
+		       (select pro_start from promotion where pro_code=v.ser_code) pro_start,
+		       (select pro_end from promotion where pro_code=v.ser_code) pro_end
+		FROM v_service_list v
+		WHERE SER_CODE=#{ser_code}
+		
+	</select>
+
+
+</mapper>

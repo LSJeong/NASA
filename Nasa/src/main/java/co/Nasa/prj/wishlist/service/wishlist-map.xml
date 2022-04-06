@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.Nasa.prj.wishlist.service.WishlistMapper">
+	<select id="selectBuyerWishlist" resultType="co.Nasa.prj.comm.VO.WishlistVO">
+		SELECT *
+		FROM WISHLIST
+		WHERE B_ID = #{b_id}
+	</select>
+	
+	<delete id="deleteWishlist" parameterType="co.Nasa.prj.comm.VO.WishlistVO">
+		DELETE FROM WISHLIST
+		WHERE B_ID = #{b_id} AND S_ID = #{s_id}
+	</delete>
+	
+	<select id="selectPagingWishlist" resultType="co.Nasa.prj.comm.VO.WishlistVO">
+		SELECT	*
+		FROM	(
+				 SELECT ROWNUM RN, A.*
+				 FROM	(
+				 		 SELECT *
+				 		 FROM WISHLIST
+				 		 WHERE B_ID = #{b_id}
+				 		 ORDER BY WISH_DATE DESC
+				 ) A
+		)
+		WHERE	RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="countPagingWishlist" resultType="int">
+			 SELECT		COUNT(*)
+			 FROM		WISHLIST
+			 WHERE		B_ID = #{b_id}
+	</select>
+	<insert id="insertWishlist" parameterType="co.Nasa.prj.comm.VO.WishlistVO">
+		INSERT INTO	WISHLIST(S_ID, B_ID, WISH_DATE)
+		VALUES		(#{s_id}, #{b_id}, sysdate)
+	</insert>
+</mapper>
